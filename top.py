@@ -17,15 +17,17 @@ warnings.filterwarnings("ignore")
 class AutoLoginTopSap():
     def __init__(self, host, port, username, password, ocr):
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+        self.client_host = "https://localhost:7443/api"
         self.host = host
         self.port = port
         self.username = username
         self.password = password
-        self.code_url = "https://localhost:7443/api/v1/get_gid?serverAddr=111.33.112.66&serverPort=10443&vpn_version=ngvone&auth_protocol=0&auth_port=10443&data_port=10443&data_protocol=0&cert_type=0&proxyType=&proxyAddr=&proxyPort=&proxyUser=&proxyPwd=&proxyDomain=&rnd=0.21450320730512473"
+        self.code_url = self.client_host + "/v1/get_gid?serverAddr=111.33.112.66&serverPort=10443&vpn_version=ngvone&auth_protocol=0&auth_port=10443&data_port=10443&data_protocol=0&cert_type=0&proxyType=&proxyAddr=&proxyPort=&proxyUser=&proxyPwd=&proxyDomain=&rnd=0.21450320730512473"
         self.auto_code_url = ocr
-        self.logout_url = "https://localhost:7443/api/v1/logout"
-        self.login_url = "https://localhost:7443/api/v1/login_by_pwd"
-        self.query_statistics_url = "https://localhost:7443/api/v1/query_statistics"
+        self.logout_url = self.client_host + "/v1/logout"
+        self.login_url = self.client_host + "/v1/login_by_pwd"
+        self.config_info_url = self.client_host + "/v1/get_config_info"
+        self.query_statistics_url = self.client_host + "/v1/query_statistics"
         self.session = requests.session()
         self.json_headers = {
             'Content-Type': 'application/json'
@@ -75,6 +77,11 @@ class AutoLoginTopSap():
 
         terr_code = response.get('terr_code') # != 0 
 
+        return response
+    
+    def get_config_info(self):
+        data = {"method": "get_config_info"}
+        response = self.session.post(self.config_info_url, headers=self.json_headers, data=json.dumps(data), verify=False).json()
         return response
     
     def logout(self):
@@ -132,32 +139,27 @@ class AutoLoginTopSap():
         while True:
             try:
                 stat = self.query_statistics()
-                print(stat)
                 if stat.get('terr_code') != 0 or stat.get('session_id') == '':
                     self.login()
             except Exception as e:
                 print(e)
                 pass
             time.sleep(1)
+            return stat 
              
 
-    # def auto_login(self, retry=3):
-        
-config = configparser.ConfigParser()
-config.read('env.ini')
+if __name__ == "__main__":
+    config = configparser.ConfigParser()
+    config.read('env.ini')
 
-env = config.get('ENV', 'env')
+    env = config.get('ENV', 'env')
 
-host = config.get(env, 'host')
-port = config.get(env, 'port')
-username = config.get(env, 'username')
-password = config.get(env, 'password')
-ocr = config.get(env, 'ocr_url')
+    host = config.get(env, 'host')
+    port = config.get(env, 'port')
+    username = config.get(env, 'username')
+    password = config.get(env, 'password')
+    ocr = config.get(env, 'ocr_url')
 
-
-
-print("start")
-auto_login = AutoLoginTopSap(host, port, username, password, ocr)
-auto_login.listen()
-
+    app = AutoLoginTopSap(host, port, username, password, ocr)
+    print(app.get_config_info())
 
