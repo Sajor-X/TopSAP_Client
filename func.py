@@ -1,3 +1,5 @@
+import os 
+
 def timestamp(e):
     e = int(e)
     t = str(int(e)) + "秒"
@@ -30,3 +32,33 @@ def timestamp_to_str(seconds):
     result += f"{seconds}秒"
 
     return result
+
+ 
+def calc_recv_send(size):
+    if size < 1024:
+        size = str(size) + "B"
+    elif size >= 1024 and size < 1024*1024:
+        size = "{:.2f}".format(size / 1024) + "KB"
+    elif size >= 1024*1024 and size < 1024*1024*1024:
+        size = "{:.2f}".format(size / (1024*1024)) + "MB"
+    elif size >= 1024*1024*1024 and size < 1024*1024*1024*1024:
+        size = "{:.2f}".format(size / (1024*1024*1024)) + "GB"
+    else:
+        size = "{:.2f}".format(size / (1024*1024*1024*1024)) + "TB"
+    return size
+
+
+
+
+
+async def check_network():
+    try:
+        await asyncio.create_subprocess_exec('ping', '-c', '1', '172.38.80.214')
+        print("网络通畅")
+        return True
+    except subprocess.CalledProcessError:
+        print("网络不通畅")
+        return False
+
+check_network()
+

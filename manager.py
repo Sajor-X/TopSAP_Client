@@ -1,13 +1,9 @@
 import tkinter as tk
 import configparser
 from top import AutoLoginTopSap
-from func import timestamp, timestamp_to_str
-from PIL import Image, ImageTk
+from func import timestamp, timestamp_to_str, calc_recv_send
 import sys
 import os
-import win32gui
-import win32con
-import win32api
 
 
 class AutoLoginApp:
@@ -16,72 +12,57 @@ class AutoLoginApp:
         self.icon_path = os.path.join(sys.path[0], 'favicon.ico')
 
         self.root = tk.Tk()
-        self.root.title("连接状态")
+        self.root.title("VPN")
         self.root.geometry("300x200")
         self.root.resizable(False, False)
 
         # 创建变量
         self.connection_status = tk.StringVar()
+        self.connection_recv = tk.StringVar()
         self.update_tunnel_duration()
 
         # 创建标签
         self.status_label = tk.Label(self.root, textvariable=self.connection_status)
-        self.status_label.pack(pady=20)
-        # 创建按钮
-        self.minimize_button = tk.Button(self.root, text="最小化", command=self.minimize_to_tray)
-        self.minimize_button.pack(pady=10)
+        self.recv_label = tk.Label(self.root, textvariable=self.connection_recv)
+
+        self.status_label.grid(row=0, column=0)
+        self.recv_label.grid(row=0, column=1)
+
+
+        # 创建菜单栏
+        self.menu_bar = tk.Menu(self.root)
+        self.root.config(menu=self.menu_bar)
+
+        # 创建菜单
+        self.menu = tk.Menu(self.menu_bar, tearoff=0)
+        self.menu_bar.add_cascade(label="重新登陆", command=self.retry_login)
+        
 
         # 创建托盘图标
-        self.create_tray_icon()
+        # self.create_tray_icon()
         self.root.iconbitmap(self.icon_path)
 
-    def minimize_to_tray(self):
-        # 最小化窗口到托盘
-        self.root.withdraw()
-        self.tray_icon.visible = True
+    def retry_login(self):
 
-    def create_tray_icon(self):
-        # 创建托盘图标
-        
-        self.nid = (self.root.winfo_id(), 0, win32gui.NIF_ICON | win32gui.NIF_MESSAGE | win32gui.NIF_TIP, win32con.WM_USER + 20, win32gui.LoadIcon(0, win32con.IDI_APPLICATION), "AutoLoginApp")
-        win32gui.Shell_NotifyIcon(win32gui.NIM_ADD, self.nid)
+        # 重新登陆
+        self.auto_login.logout()
+        self.auto_login.login()
 
-        def on_tray_click(hwnd, msg, wparam, lparam):
-            if lparam == win32con.WM_LBUTTONUP:
-                self.restore_window()
-            elif lparam == win32con.WM_RBUTTONUP:
-                menu = win32gui.CreatePopupMenu()
-                win32gui.AppendMenu(menu, win32con.MF_STRING, 1024, '打开')
-                win32gui.AppendMenu(menu, win32con.MF_STRING, 1025, '退出')
-                pos = win32gui.GetCursorPos()
-                win32gui.SetForegroundWindow(self.root.winfo_id())
-                win32gui.TrackPopupMenu(menu, win32con.TPM_LEFTALIGN, pos[0], pos[1], 0, hwnd, None)
-                win32gui.PostMessage(hwnd, win32con.WM_NULL, 0, 0)
-
-        win32gui.SetWindowLong(self.root.winfo_id(), win32con.GWL_WNDPROC, on_tray_click)
-
-    def restore_window(self):
-        # 从托盘还原窗口
-        self.root.deiconify()
-        self.tray_icon.visible = False
-
-    def exit_app(self):
-        # 退出应用程序
-        self.root.quit()
-
-    def minimize_window(self):
-        # 最小化窗口到任务栏
-        self.root.iconify()
-        
 
     def update_tunnel_duration(self):
         stat = self.auto_login.query_statistics()
+        print(stat)
         if stat.get('terr_code') != 0 or stat.get('session_id') == '':
             self.auto_login.login()
-        tunnel_duration = stat.get('tunnel_duration')
+        else:
+            tunnel_duration = stat.get('tunnel_duration')
+            self.connection_status.set("已连接时长：" + timestamp_to_str(tunnel_duration))
 
-        self.connection_status.set("已连接时长：" + timestamp_to_str(tunnel_duration))
+            recv_bytes = stat.get('recv_bytes')
+            send_bytes = stat.get('send_bytes')
+            self.connection_recv.set("↓" + calc_recv_send(recv_bytes) + " / ↑" + calc_recv_send(send_bytes))
         self.root.after(1000, self.update_tunnel_duration)
+            
 
     def run(self):
         # 运行主循环

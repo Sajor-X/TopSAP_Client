@@ -28,6 +28,7 @@ class AutoLoginTopSap():
         self.login_url = self.client_host + "/v1/login_by_pwd"
         self.config_info_url = self.client_host + "/v1/get_config_info"
         self.query_statistics_url = self.client_host + "/v1/query_statistics"
+        self.test_url = 'http://172.38.80.214'
         self.session = requests.session()
         self.json_headers = {
             'Content-Type': 'application/json'
@@ -90,7 +91,15 @@ class AutoLoginTopSap():
         """
         data = {"method":"logout"}
         response = self.session.post(self.logout_url, headers=self.json_headers, data=json.dumps(data), verify=False).text
+        time.sleep(1)
         return response
+    
+    @retry(stop_max_attempt_number=3)
+    def test(self):
+        try:
+            self.session.get(self.test_url)
+        except Exception as ignore:
+            pass
     
     @retry(stop_max_attempt_number=10)
     def login(self):
