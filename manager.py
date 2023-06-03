@@ -19,7 +19,6 @@ class AutoLoginApp:
         # 创建变量
         self.connection_status = tk.StringVar()
         self.connection_recv = tk.StringVar()
-        self.update_tunnel_duration()
 
         # 创建标签
         self.status_label = tk.Label(self.root, textvariable=self.connection_status)
@@ -36,11 +35,16 @@ class AutoLoginApp:
         # 创建菜单
         self.menu = tk.Menu(self.menu_bar, tearoff=0)
         self.menu_bar.add_cascade(label="重新登陆", command=self.retry_login)
+
+         # 创建按钮
+        self.retry_button = tk.Button(self.root, text="重新登陆", command=self.retry_login)
+        self.retry_button.grid(row=1, column=1)
         
 
         # 创建托盘图标
         # self.create_tray_icon()
         self.root.iconbitmap(self.icon_path)
+        self.update_tunnel_duration()
 
     def retry_login(self):
 
@@ -50,17 +54,20 @@ class AutoLoginApp:
 
 
     def update_tunnel_duration(self):
-        stat = self.auto_login.query_statistics()
-        print(stat)
-        if stat.get('terr_code') != 0 or stat.get('session_id') == '':
-            self.auto_login.login()
-        else:
-            tunnel_duration = stat.get('tunnel_duration')
-            self.connection_status.set("已连接时长：" + timestamp_to_str(tunnel_duration))
+        try:
+            stat = self.auto_login.query_statistics()
+            print(stat)
+            if stat.get('terr_code') != 0 or stat.get('session_id') == '':
+                self.auto_login.login()
+            else:
+                tunnel_duration = stat.get('tunnel_duration')
+                self.connection_status.set("" + timestamp_to_str(tunnel_duration))
 
-            recv_bytes = stat.get('recv_bytes')
-            send_bytes = stat.get('send_bytes')
-            self.connection_recv.set("↓" + calc_recv_send(recv_bytes) + " / ↑" + calc_recv_send(send_bytes))
+                recv_bytes = stat.get('recv_bytes')
+                send_bytes = stat.get('send_bytes')
+                self.connection_recv.set("↓" + calc_recv_send(recv_bytes) + " / ↑" + calc_recv_send(send_bytes))
+        except Exception as e:
+            print(e)
         self.root.after(1000, self.update_tunnel_duration)
             
 
