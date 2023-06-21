@@ -3,14 +3,12 @@ import tkinter as tk
 import configparser
 from top import AutoLoginTopSap
 from func import timestamp, timestamp_to_str, calc_recv_send
-import sys
-import os
 
 
 class AutoLoginApp:
     def __init__(self, host, port, username, password, ocr):
         self.auto_login = AutoLoginTopSap(host, port, username, password, ocr)
-        self.icon_path = os.path.join(sys.path[0], 'favicon.ico')
+        self.icon_path = 'favicon.ico'
         self.root = tk.Tk()
         # 创建窗口
         self.create_window()
