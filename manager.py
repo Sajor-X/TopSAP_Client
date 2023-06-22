@@ -1,3 +1,5 @@
+import os
+import sys
 import threading
 import tkinter as tk
 import configparser
@@ -59,7 +61,6 @@ class AutoLoginApp:
     def retry_login(self):
         # 重新登陆
         self.auto_login.logout()
-        self.auto_login.login()
 
 
     def update_tunnel_duration(self):
@@ -83,9 +84,22 @@ class AutoLoginApp:
         # 运行主循环
         self.root.mainloop()
 
+
 if __name__ == "__main__":
     config = configparser.ConfigParser()
-    config.read('env.ini')
+
+    if sys.platform == "win32":
+        config.read("env.ini")
+        print("Windows")
+    elif sys.platform == "darwin":
+        config.read(os.path.expanduser("~") + "/.top/env.ini")
+        print("macOS")
+    elif sys.platform.startswith("linux"):
+        config.read(os.path.expanduser("~") + "/.top/env.ini")
+        print("Linux")
+    else:
+        print("Unknown platform")
+
 
     env = config.get('ENV', 'env')
 
