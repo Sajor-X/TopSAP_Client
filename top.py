@@ -22,7 +22,7 @@ class AutoLoginTopSap():
         self.port = port
         self.username = username
         self.password = password
-        self.code_url = self.client_host + "/v1/get_gid?serverAddr=111.33.112.66&serverPort=10443&vpn_version=ngvone&auth_protocol=0&auth_port=10443&data_port=10443&data_protocol=0&cert_type=0&proxyType=&proxyAddr=&proxyPort=&proxyUser=&proxyPwd=&proxyDomain=&rnd=0.21450320730512473"
+        self.code_url = f"{self.client_host}/v1/get_gid?serverAddr={host}&serverPort={port}&vpn_version=ngvone&auth_protocol=0&auth_port={port}&data_port={port}&data_protocol=0&cert_type=0&proxyType=&proxyAddr=&proxyPort=&proxyUser=&proxyPwd=&proxyDomain=&rnd=0.21450320730512473"
         self.auto_code_url = ocr
         self.logout_url = self.client_host + "/v1/logout"
         self.login_url = self.client_host + "/v1/login_by_pwd"
@@ -130,8 +130,8 @@ class AutoLoginTopSap():
             } ,
             "vpn_version" :"ngvone",
             "auth_protocol":"0" ,
-            "auth_port": "10443" ,
-            "data_port": "10443" ,
+            "auth_port": self.port ,
+            "data_port": self.port ,
             "data_protocol": "0" ,
             "cert_type": "0" ,
             "remember_pwd": "off" 
